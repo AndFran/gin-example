@@ -1,37 +1,22 @@
-package b64
+package unixtime
 
 import (
-	"encoding/base64"
-	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
+	"time"
 )
 
-var errBadRequest = errors.New("bad request")
+type handler struct {
+}
 
-type handler struct{}
-
-func (h handler) decode(c *gin.Context) {
-	b, ok := c.GetQuery("base64")
-	if !ok {
-		c.AbortWithError(http.StatusBadRequest, errBadRequest)
-		return
-	}
-	decoded, err := base64.StdEncoding.DecodeString(b)
+func (h handler) toHuman(c *gin.Context) {
+	timestamp := c.Param("timestamp")
+	parsedTimeStamp, err := strconv.ParseInt(timestamp, 10, 64)
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	c.String(http.StatusOK, string(decoded))
+	tm := time.Unix(parsedTimeStamp, 0)
+	c.String(http.StatusOK, tm.String())
 }
-
-func (h handler) encode(c *gin.Context) {
-	text, ok := c.GetQuery("text")
-	if !ok {
-		c.AbortWithError(http.StatusBadRequest, errBadRequest)
-		return
-	}
-	encoded := base64.StdEncoding.EncodeToString([]byte(text))
-	c.String(http.StatusOK, encoded)
-}
-
